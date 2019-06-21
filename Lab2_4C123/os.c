@@ -124,13 +124,14 @@ void OS_InitSemaphore(int32_t *semaPt, int32_t value){
 // Inputs:  pointer to a counting semaphore
 // Outputs: none
 void OS_Wait(int32_t *semaPt){
-  DisableInterrupts();
+long sr;
+  sr = StartCritical();
   while(*semaPt == 0) {
-    EnableInterrupts();
-    DisableInterrupts();
+    EndCritical(sr);
+    sr = StartCritical();
   }
   (*semaPt)--;
-  EnableInterrupts();
+  EndCritical(sr);
 }
 
 // ******** OS_Signal ************
@@ -140,9 +141,10 @@ void OS_Wait(int32_t *semaPt){
 // Inputs:  pointer to a counting semaphore
 // Outputs: none
 void OS_Signal(int32_t *semaPt){
-  DisableInterrupts();
+  long sr;
+  sr = StartCritical();
   (*semaPt)++;
-  EnableInterrupts();
+  EndCritical(sr);
 }
 
 
