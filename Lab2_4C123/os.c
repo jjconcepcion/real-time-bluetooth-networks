@@ -17,6 +17,10 @@ tcbType tcbs[NUMTHREADS];
 tcbType *RunPt;
 int32_t Stacks[NUMTHREADS][STACKSIZE];
 
+static uint32_t Mail;  // mailbox data
+static int32_t Send;   // mailbox semaphore 
+static int32_t Ack;    // mailbox semaphore
+
 
 // ******** OS_Init ************
 // Initialize operating system, disable interrupts
@@ -156,9 +160,9 @@ void OS_Signal(int32_t *semaPt){
 // Inputs:  none
 // Outputs: none
 void OS_MailBox_Init(void){
-  // include data field and semaphore
-  //***YOU IMPLEMENT THIS FUNCTION*****
-
+  Mail = 0;
+  OS_InitSemaphore(&Send, 0);
+  OS_InitSemaphore(&Ack, 0);
 }
 
 // ******** OS_MailBox_Send ************
@@ -168,8 +172,8 @@ void OS_MailBox_Init(void){
 // Outputs: none
 // Errors: data lost if MailBox already has data
 void OS_MailBox_Send(uint32_t data){
-  //***YOU IMPLEMENT THIS FUNCTION*****
-
+  Mail = data;
+  OS_Signal(&Send);
 }
 
 // ******** OS_MailBox_Recv ************
@@ -181,7 +185,8 @@ void OS_MailBox_Send(uint32_t data){
 // Outputs: data retreived
 // Errors:  none
 uint32_t OS_MailBox_Recv(void){ uint32_t data;
-  //***YOU IMPLEMENT THIS FUNCTION*****
+  OS_Wait(&Send);
+  data = Mail;
   return data;
 }
 
