@@ -27,7 +27,15 @@
 #define __OS_H  1
 // grader needs access to TCBs and stacks
 #define NUMTHREADS  4        // maximum number of threads
+#define NUMEVENTS    2       // maximum number of periodic event threads
 #define STACKSIZE   100      // number of 32-bit words in stack per thread
+
+struct event {
+  uint32_t period;
+  void (*func)(void);
+};
+typedef struct event eventType;
+
 struct tcb{
   int32_t *sp;       // pointer to stack (valid for threads not running
   struct tcb *next;  // linked-list pointer

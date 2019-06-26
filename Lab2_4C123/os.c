@@ -9,21 +9,16 @@
 #include "../inc/CortexM.h"
 #include "../inc/BSP.h"
 
-#define TASK0_FREQ  2       // 1ms  (time_slice_count units)
-#define TASK1_FREQ  200     // 100ms (time_slice_count units)
+#define TIME_SLICE_FACTOR 2     // correction for event period units of ms
 
 // function definitions in osasm.s
 void StartOS(void);
 
-// function definitions in Lab2.c
-void Task0(void);
-void Task1(void);
-
-
+eventType events[NUMEVENTS];
 tcbType tcbs[NUMTHREADS];
 tcbType *RunPt;
 int32_t Stacks[NUMTHREADS][STACKSIZE];
-uint32_t time_slice_count;  // units 0.5ms
+uint32_t time_slice_count;  // 0.5 ms units 
 
 static uint32_t Mail;  // mailbox data
 static int32_t Send;   // mailbox semaphore 
@@ -137,7 +132,10 @@ int OS_AddThreads3(void(*task0)(void),
 // These threads can call OS_Signal
 int OS_AddPeriodicEventThreads(void(*thread1)(void), uint32_t period1,
   void(*thread2)(void), uint32_t period2){
-  //***YOU IMPLEMENT THIS FUNCTION*****
+  events[0].func = thread1;
+  events[0].period = period1;
+  events[1].func = thread2;
+  events[1].period = period2;
 
   return 1;
 }
@@ -160,11 +158,11 @@ void Scheduler(void){ // every time slice
   // run any periodic event threads if needed
   // implement round robin scheduler, update RunPt
   time_slice_count++;
-  if ((time_slice_count % TASK0_FREQ == 1)) {
-    Task0();
+  if ((time_slice_count % (events[0].period * TIME_SLICE_FACTOR) == 1)) {
+    events[0].func();   // execute Task0
   }
-  if ((time_slice_count % TASK1_FREQ == 0)) {
-    Task1();
+  if ((time_slice_count % (events[1].period * TIME_SLICE_FACTOR) == 0)) {
+    events[1].func();   // execute Task1
   }
 
   RunPt = RunPt->next;
