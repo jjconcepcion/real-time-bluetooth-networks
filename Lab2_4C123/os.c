@@ -151,7 +151,7 @@ void OS_Launch(uint32_t theTimeSlice){
 void Scheduler(void){ // every time slice
   // run any periodic event threads if needed
   // implement round robin scheduler, update RunPt
-  //***YOU IMPLEMENT THIS FUNCTION*****
+  RunPt = RunPt->next;
 
 }
 

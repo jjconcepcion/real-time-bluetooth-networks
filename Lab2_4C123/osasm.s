@@ -23,8 +23,12 @@ SysTick_Handler                 ; 1) Saves R0-R3,R12,LR,PC,PSR
     LDR     R0, =RunPt          ; 4) R0 = &RunPt
     LDR     R1, [R0]            ;    R1 = pointer to outgoing thread
     STR     SP, [R1]            ; 5) save stack pointer outgoing thread
-    LDR     R1, [R1,#4]         ; 6) R1 = pointer to incoming thread
-    STR     R1, [R0]            ;    update RunPt with incoming thread
+;    LDR     R1, [R1,#4]         ; 6) R1 = pointer to incoming thread
+;    STR     R1, [R0]            ;    update RunPt with incoming thread
+    PUSH    {R0,LR}
+    BL      Scheduler
+    POP     {R0,LR}
+    LDR     R1, [R0]
     LDR     SP, [R1]            ; 7) restore stack pointer of incoming thread
     POP     {R4-R11}            ; 8) restore R4-R11 of incoming thread
     CPSIE   I                   ; 9) tasks run with interrupts enabled
