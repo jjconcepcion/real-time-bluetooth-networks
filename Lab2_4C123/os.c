@@ -9,13 +9,19 @@
 #include "../inc/CortexM.h"
 #include "../inc/BSP.h"
 
+#define TASK1_FREQ  100
+
 // function definitions in osasm.s
 void StartOS(void);
+
+// function definitions in Lab2.c
+void Task1(void);
 
 
 tcbType tcbs[NUMTHREADS];
 tcbType *RunPt;
 int32_t Stacks[NUMTHREADS][STACKSIZE];
+uint32_t time_slice_count;  // units 1ms
 
 static uint32_t Mail;  // mailbox data
 static int32_t Send;   // mailbox semaphore 
@@ -32,7 +38,7 @@ void OS_Init(void){
   DisableInterrupts();
   BSP_Clock_InitFastest();// set processor clock to fastest speed
   // initialize any global variables as needed
-  //***YOU IMPLEMENT THIS FUNCTION*****
+  time_slice_count = 0;
 
 }
 
@@ -151,8 +157,11 @@ void OS_Launch(uint32_t theTimeSlice){
 void Scheduler(void){ // every time slice
   // run any periodic event threads if needed
   // implement round robin scheduler, update RunPt
+  time_slice_count++;
+  if ((time_slice_count % TASK1_FREQ == 0)) {
+    Task1();
+  }
   RunPt = RunPt->next;
-
 }
 
 // ******** OS_InitSemaphore ************
