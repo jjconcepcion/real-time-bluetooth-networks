@@ -37,8 +37,22 @@ void OS_Init(void){
 }
 
 void SetInitialStack(int i){
-  //***YOU IMPLEMENT THIS FUNCTION*****
-
+  Stacks[i][STACKSIZE-1] = 0x01000000;   // Thumb bit 
+  Stacks[i][STACKSIZE-3] = 0x14141414;   // R14 
+  Stacks[i][STACKSIZE-4] = 0x12121212;   // R12 
+  Stacks[i][STACKSIZE-5] = 0x03030303;   // R3 
+  Stacks[i][STACKSIZE-6] = 0x02020202;   // R2 
+  Stacks[i][STACKSIZE-7] = 0x01010101;   // R1 
+  Stacks[i][STACKSIZE-8] = 0x00000000;   // R0 
+  Stacks[i][STACKSIZE-9] = 0x11111111;   // R11 
+  Stacks[i][STACKSIZE-10] = 0x10101010;  // R10 
+  Stacks[i][STACKSIZE-11] = 0x09090909;  // R9 
+  Stacks[i][STACKSIZE-12] = 0x08080808;  // R8 
+  Stacks[i][STACKSIZE-13] = 0x07070707;  // R7 
+  Stacks[i][STACKSIZE-14] = 0x06060606;  // R6 
+  Stacks[i][STACKSIZE-15] = 0x05050505;  // R5 
+  Stacks[i][STACKSIZE-16] = 0x04040404;  // R4 
+  tcbs[i].sp = &Stacks[i][STACKSIZE-16]; // thread stack pointer 
 }
 
 //******** OS_AddThreads ***************
@@ -66,11 +80,22 @@ int OS_AddThreads(void(*thread0)(void),
 int OS_AddThreads3(void(*task0)(void),
                  void(*task1)(void),
                  void(*task2)(void)){ 
-// initialize TCB circular list (same as RTOS project)
-// initialize RunPt
-// initialize four stacks, including initial PC
-  //***YOU IMPLEMENT THIS FUNCTION*****
-
+  int32_t sr;
+  sr = StartCritical();
+  // initialize TCB circular list (same as RTOS project)
+  tcbs[0].next = &tcbs[1];
+	tcbs[1].next = &tcbs[2];
+	tcbs[2].next = &tcbs[0];
+  RunPt = &tcbs[0];      // thread 0 is first to run
+  // initialize stacks
+  SetInitialStack(0);
+  SetInitialStack(1);
+  SetInitialStack(2);
+  // initialize PCs
+  Stacks[0][STACKSIZE-2] = (int32_t) task0;
+  Stacks[1][STACKSIZE-2] = (int32_t) task1;
+  Stacks[2][STACKSIZE-2] = (int32_t) task2;
+  EndCritical(sr);
   return 1;               // successful
 }
                  
@@ -128,7 +153,7 @@ void OS_InitSemaphore(int32_t *semaPt, int32_t value){
 // Inputs:  pointer to a counting semaphore
 // Outputs: none
 void OS_Wait(int32_t *semaPt){
-long sr;
+  long sr;
   sr = StartCritical();
   while(*semaPt == 0) {
     EndCritical(sr);
