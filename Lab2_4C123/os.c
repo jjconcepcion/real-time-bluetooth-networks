@@ -9,19 +9,21 @@
 #include "../inc/CortexM.h"
 #include "../inc/BSP.h"
 
-#define TASK1_FREQ  100
+#define TASK0_FREQ  2       // 1ms  (time_slice_count units)
+#define TASK1_FREQ  200     // 100ms (time_slice_count units)
 
 // function definitions in osasm.s
 void StartOS(void);
 
 // function definitions in Lab2.c
+void Task0(void);
 void Task1(void);
 
 
 tcbType tcbs[NUMTHREADS];
 tcbType *RunPt;
 int32_t Stacks[NUMTHREADS][STACKSIZE];
-uint32_t time_slice_count;  // units 1ms
+uint32_t time_slice_count;  // units 0.5ms
 
 static uint32_t Mail;  // mailbox data
 static int32_t Send;   // mailbox semaphore 
@@ -158,9 +160,13 @@ void Scheduler(void){ // every time slice
   // run any periodic event threads if needed
   // implement round robin scheduler, update RunPt
   time_slice_count++;
+  if ((time_slice_count % TASK0_FREQ == 1)) {
+    Task0();
+  }
   if ((time_slice_count % TASK1_FREQ == 0)) {
     Task1();
   }
+
   RunPt = RunPt->next;
 }
 
