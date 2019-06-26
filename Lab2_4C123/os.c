@@ -67,7 +67,25 @@ int OS_AddThreads(void(*thread0)(void),
 // initialize TCB circular list
 // initialize RunPt
 // initialize four stacks, including initial PC
-  //***YOU IMPLEMENT THIS FUNCTION*****
+  int32_t sr;
+  sr = StartCritical();
+  // initialize TCB circular list (same as RTOS project)
+  tcbs[0].next = &tcbs[1];
+  tcbs[1].next = &tcbs[2];
+  tcbs[2].next = &tcbs[3];
+  tcbs[3].next = &tcbs[0];
+  RunPt = &tcbs[0];      // thread 0 is first to run
+  // initialize stacks
+  SetInitialStack(0);
+  SetInitialStack(1);
+  SetInitialStack(2);
+  SetInitialStack(3);
+  // initialize PCs
+  Stacks[0][STACKSIZE-2] = (int32_t) thread0;
+  Stacks[1][STACKSIZE-2] = (int32_t) thread1;
+  Stacks[2][STACKSIZE-2] = (int32_t) thread2;
+  Stacks[3][STACKSIZE-2] = (int32_t) thread3;
+  EndCritical(sr);
 
   return 1;               // successful
 }
