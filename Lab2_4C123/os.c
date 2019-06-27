@@ -9,8 +9,6 @@
 #include "../inc/CortexM.h"
 #include "../inc/BSP.h"
 
-#define TIME_SLICE_FACTOR 2     // correction for event period units of ms
-
 // function definitions in osasm.s
 void StartOS(void);
 
@@ -18,7 +16,7 @@ eventType events[NUMEVENTS];
 tcbType tcbs[NUMTHREADS];
 tcbType *RunPt;
 int32_t Stacks[NUMTHREADS][STACKSIZE];
-uint32_t time_slice_count;  // 0.5 ms units 
+uint32_t time_slice_count;  // 1 ms units 
 
 static uint32_t Mail;  // mailbox data
 static int32_t Send;   // mailbox semaphore 
@@ -158,10 +156,10 @@ void Scheduler(void){ // every time slice
   // run any periodic event threads if needed
   // implement round robin scheduler, update RunPt
   time_slice_count++;
-  if ((time_slice_count % (events[0].period * TIME_SLICE_FACTOR) == 1)) {
+  if (time_slice_count % events[0].period == 0) {
     events[0].func();   // execute Task0
   }
-  if ((time_slice_count % (events[1].period * TIME_SLICE_FACTOR) == 0)) {
+  if (time_slice_count % events[1].period == 0) {
     events[1].func();   // execute Task1
   }
 
