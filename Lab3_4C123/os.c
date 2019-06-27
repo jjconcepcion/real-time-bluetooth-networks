@@ -129,7 +129,7 @@ void OS_Sleep(uint32_t sleepTime){
 //          initial value of semaphore
 // Outputs: none
 void OS_InitSemaphore(int32_t *semaPt, int32_t value){
-//***IMPLEMENT THIS***
+  *semaPt = value;
 }
 
 // ******** OS_Wait ************
@@ -139,7 +139,14 @@ void OS_InitSemaphore(int32_t *semaPt, int32_t value){
 // Inputs:  pointer to a counting semaphore
 // Outputs: none
 void OS_Wait(int32_t *semaPt){
-//***IMPLEMENT THIS***
+  uint32_t sr;
+  sr = StartCritical();
+  while(*semaPt == 0) {
+    EndCritical(sr);
+    sr = StartCritical();
+  }
+  (*semaPt)--;
+  EndCritical(sr);
 }
 
 // ******** OS_Signal ************
@@ -149,7 +156,10 @@ void OS_Wait(int32_t *semaPt){
 // Inputs:  pointer to a counting semaphore
 // Outputs: none
 void OS_Signal(int32_t *semaPt){
-//***IMPLEMENT THIS***
+  uint32_t sr;
+  sr = StartCritical();
+  (*semaPt)++;
+  EndCritical(sr);
 }
 
 #define FSIZE 10    // can be any size
