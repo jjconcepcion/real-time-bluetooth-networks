@@ -20,7 +20,7 @@ struct tcb{
   struct tcb *next;  // linked-list pointer
    // nonzero if blocked on this semaphore
    // nonzero if this thread is sleeping
-//*FILL THIS IN****
+  int32_t *blocked;
 };
 typedef struct tcb tcbType;
 tcbType tcbs[NUMTHREADS];
@@ -140,12 +140,15 @@ void OS_InitSemaphore(int32_t *semaPt, int32_t value){
 // Outputs: none
 void OS_Wait(int32_t *semaPt){
   uint32_t sr;
+
   sr = StartCritical();
-  while(*semaPt == 0) {
-    EndCritical(sr);
-    sr = StartCritical();
-  }
   (*semaPt)--;
+  if (*semaPt < 0) {    // block current thread
+    RunPt->blocked = semaPt;
+    EndCritical(sr);
+    OS_Suspend();
+    return;             // OS_Suspend() has triggered SysTick 
+  }
   EndCritical(sr);
 }
 
@@ -159,6 +162,13 @@ void OS_Signal(int32_t *semaPt){
   uint32_t sr;
   sr = StartCritical();
   (*semaPt)++;
+  if (*semaPt <= 0) {   // unblock a waiting thread
+    RunPt = RunPt->next;
+    while (RunPt->blocked != semaPt) {
+      RunPt = RunPt->next;
+    }
+    RunPt->blocked = 0;
+  }
   EndCritical(sr);
 }
 
