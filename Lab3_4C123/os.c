@@ -6,8 +6,8 @@
 
 #include <stdint.h>
 #include "os.h"
-#include "CortexM.h"
-#include "BSP.h"
+#include "../inc/CortexM.h"
+#include "../inc/BSP.h"
 
 // function definitions in osasm.s
 void StartOS(void);
