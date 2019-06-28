@@ -145,6 +145,10 @@ void OS_Launch(uint32_t theTimeSlice){
 // runs every ms
 void Scheduler(void){ // every time slice
 // ROUND ROBIN, skip blocked and sleeping threads
+  RunPt = RunPt->next; 
+  while (RunPt->blocked) {
+    RunPt = RunPt->next;
+  }
 }
 
 //******** OS_Suspend ***************
