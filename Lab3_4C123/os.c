@@ -15,6 +15,9 @@ void StartOS(void);
 #define NUMTHREADS  6        // maximum number of threads
 #define NUMPERIODIC 2        // maximum number of periodic threads
 #define STACKSIZE   100      // number of 32-bit words in stack per thread
+#define FIFOSUCCESS 0
+#define FIFOFULL    -1
+
 struct tcb{
   int32_t *sp;       // pointer to stack (valid for threads not running
   struct tcb *next;  // linked-list pointer
@@ -236,7 +239,10 @@ uint32_t LostData;  // number of lost pieces of data
 // Inputs:  none
 // Outputs: none
 void OS_FIFO_Init(void){
-//***IMPLEMENT THIS***
+  OS_InitSemaphore(&CurrentSize, 0);
+  PutI = 0;
+  GetI = 0;
+  LostData = 0;
 }
 
 // ******** OS_FIFO_Put ************
@@ -246,10 +252,19 @@ void OS_FIFO_Init(void){
 // Inputs:  data to be stored
 // Outputs: 0 if successful, -1 if the FIFO is full
 int OS_FIFO_Put(uint32_t data){
-//***IMPLEMENT THIS***
+  int status;
 
-  return 0;   // success
+  if (CurrentSize == FSIZE) {
+    LostData++;
+    status = FIFOFULL;
+  } else {
+    Fifo[PutI] = data;
+    PutI = (PutI + 1) % FSIZE;
+    OS_Signal(&CurrentSize);
+    status = FIFOSUCCESS;
+  }
 
+  return status;
 }
 
 // ******** OS_FIFO_Get ************
@@ -259,7 +274,9 @@ int OS_FIFO_Put(uint32_t data){
 // Inputs:  none
 // Outputs: data retrieved
 uint32_t OS_FIFO_Get(void){uint32_t data;
-//***IMPLEMENT THIS***
+  OS_Wait(&CurrentSize);    // block if empty
+  data = Fifo[GetI];
+  GetI = (GetI + 1) % FSIZE;
 
   return data;
 }
