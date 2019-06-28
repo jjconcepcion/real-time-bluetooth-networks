@@ -205,14 +205,16 @@ void OS_Wait(int32_t *semaPt){
 // Outputs: none
 void OS_Signal(int32_t *semaPt){
   uint32_t sr;
+  tcbType *waitPt;
+
   sr = StartCritical();
   (*semaPt)++;
   if (*semaPt <= 0) {   // unblock a waiting thread
-    RunPt = RunPt->next;
-    while (RunPt->blocked != semaPt) {
-      RunPt = RunPt->next;
+    waitPt = RunPt->next;
+    while (waitPt->blocked != semaPt) {
+      waitPt = RunPt->next;
     }
-    RunPt->blocked = 0;
+    waitPt->blocked = 0;
   }
   EndCritical(sr);
 }
