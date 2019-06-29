@@ -24,12 +24,14 @@ struct tcb{
    // nonzero if blocked on this semaphore
    // nonzero if this thread is sleeping
   int32_t *blocked;
+  uint32_t sleep;
 };
 typedef struct tcb tcbType;
 tcbType tcbs[NUMTHREADS];
 tcbType *RunPt;
 int32_t Stacks[NUMTHREADS][STACKSIZE];
 
+void static runperiodicevents(void);
 
 // ******** OS_Init ************
 // Initialize operating system, disable interrupts
@@ -41,6 +43,7 @@ void OS_Init(void){
   DisableInterrupts();
   BSP_Clock_InitFastest();// set processor clock to fastest speed
   // perform any initializations needed
+  BSP_PeriodicTask_Init(&runperiodicevents, 1000, 6);
 }
 
 void SetInitialStack(int i){
@@ -104,6 +107,13 @@ int OS_AddThreads(void(*thread0)(void),
   tcbs[3].blocked = 0;
   tcbs[4].blocked = 0;
   tcbs[5].blocked = 0;
+  // initialize as not sleeping
+  tcbs[0].sleep = 0;
+  tcbs[1].sleep = 0;
+  tcbs[2].sleep = 0;
+  tcbs[3].sleep = 0;
+  tcbs[4].sleep = 0;
+  tcbs[5].sleep = 0;
   EndCritical(sr);
 
   return 1;               // successful
@@ -126,10 +136,18 @@ int OS_AddPeriodicEventThread(void(*thread)(void), uint32_t period){
 
 }
 
+void static decrement_sleep_timer(void) {
+  int i;
+  for (i = 0; i < NUMTHREADS; i++) {
+    if (tcbs[i].sleep)
+      tcbs[i].sleep--;
+  }
+}
+
 void static runperiodicevents(void){
 // ****IMPLEMENT THIS****
-// **RUN PERIODIC THREADS, DECREMENT SLEEP COUNTERS
-
+// **RUN PERIODIC THREADS
+  decrement_sleep_timer(); 
 }
 
 //******** OS_Launch ***************
@@ -149,7 +167,7 @@ void OS_Launch(uint32_t theTimeSlice){
 void Scheduler(void){ // every time slice
 // ROUND ROBIN, skip blocked and sleeping threads
   RunPt = RunPt->next; 
-  while (RunPt->blocked) {
+  while (RunPt->blocked || RunPt->sleep) {
     RunPt = RunPt->next;
   }
 }
@@ -171,8 +189,8 @@ void OS_Suspend(void){
 // output: none
 // OS_Sleep(0) implements cooperative multitasking
 void OS_Sleep(uint32_t sleepTime){
-// set sleep parameter in TCB
-// suspend, stops running
+  RunPt->sleep = sleepTime;
+  OS_Suspend();
 }
 
 // ******** OS_InitSemaphore ************
