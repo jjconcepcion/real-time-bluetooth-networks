@@ -27,9 +27,18 @@ struct tcb{
   uint32_t sleep;
 };
 typedef struct tcb tcbType;
+
+struct event {
+  uint32_t period;
+  void (*func)(void);    // function pointer to event thread function
+};
+typedef struct event eventType;
+
 tcbType tcbs[NUMTHREADS];
 tcbType *RunPt;
 int32_t Stacks[NUMTHREADS][STACKSIZE];
+eventType event_threads[NUMTHREADS];
+uint32_t event_thread_count;
 
 void static runperiodicevents(void);
 
@@ -43,6 +52,7 @@ void OS_Init(void){
   DisableInterrupts();
   BSP_Clock_InitFastest();// set processor clock to fastest speed
   // perform any initializations needed
+  event_thread_count = 0;
   BSP_PeriodicTask_Init(&runperiodicevents, 1000, 6);
 }
 
@@ -131,9 +141,20 @@ int OS_AddThreads(void(*thread0)(void),
 // These threads can call OS_Signal
 // In Lab 3 this will be called exactly twice
 int OS_AddPeriodicEventThread(void(*thread)(void), uint32_t period){
-// ****IMPLEMENT THIS****
-  return 1;
+  // ****IMPLEMENT THIS****
+  uint32_t i;
+  int thread_added;
 
+  thread_added = 0;
+  if (event_thread_count < NUMTHREADS) {
+    i = event_thread_count;
+    event_threads[i].func = thread;
+    event_threads[i].period = period;
+    event_thread_count++;
+    thread_added = 1;
+  }
+
+  return thread_added;
 }
 
 void static decrement_sleep_timer(void) {
