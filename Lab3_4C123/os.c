@@ -31,6 +31,7 @@ typedef struct tcb tcbType;
 struct event {
   uint32_t period;
   void (*func)(void);    // function pointer to event thread function
+  uint32_t countdown;
 };
 typedef struct event eventType;
 
@@ -146,10 +147,11 @@ int OS_AddPeriodicEventThread(void(*thread)(void), uint32_t period){
   int thread_added;
 
   thread_added = 0;
-  if (event_thread_count < NUMTHREADS) {
+  if (event_thread_count < NUMTHREADS && period > 0) {
     i = event_thread_count;
     event_threads[i].func = thread;
     event_threads[i].period = period;
+    event_threads[i].countdown = period;
     event_thread_count++;
     thread_added = 1;
   }
@@ -165,10 +167,20 @@ void static decrement_sleep_timer(void) {
   }
 }
 
+void static execute_event_threads(void) {
+  int i;
+  for (i = 0; i < event_thread_count; i++) {
+    event_threads[i].countdown--;
+    if (event_threads[i].countdown == 0) {
+      event_threads[i].func();
+      event_threads[i].countdown = event_threads[i].period;
+    }
+  }
+}
+
 void static runperiodicevents(void){
-// ****IMPLEMENT THIS****
-// **RUN PERIODIC THREADS
   decrement_sleep_timer(); 
+  execute_event_threads();
 }
 
 //******** OS_Launch ***************
