@@ -258,7 +258,7 @@ void OS_Signal(int32_t *semaPt){
   if (*semaPt <= 0) {   // unblock a waiting thread
     waitPt = RunPt->next;
     while (waitPt->blocked != semaPt) {
-      waitPt = RunPt->next;
+      waitPt = waitPt->next;
     }
     waitPt->blocked = 0;
   }
