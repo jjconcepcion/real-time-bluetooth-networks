@@ -88,43 +88,26 @@ int OS_AddThreads(void(*thread0)(void),
                   void(*thread4)(void),
                   void(*thread5)(void)){
   int32_t sr;
+
   sr = StartCritical();
+  int i, j;
+  void(*threads[NUMTHREADS])(void) = {
+    thread0, thread1, thread2, thread3, thread4, thread5
+  };
+
   // initialize TCB circular list (same as RTOS project)
-  tcbs[0].next = &tcbs[1];
-  tcbs[1].next = &tcbs[2];
-  tcbs[2].next = &tcbs[3];
-  tcbs[3].next = &tcbs[4];
-  tcbs[4].next = &tcbs[5];
-  tcbs[5].next = &tcbs[0];
+  for (i = 0; i < NUMTHREADS; i++) {
+    tcbs[i].next = &tcbs[(i+1)%NUMTHREADS];
+  }
+  // initialize TCB
+  for (j = 0; j < NUMTHREADS; j++) {
+    SetInitialStack(j);         // initialize stacks
+    Stacks[j][STACKSIZE-2] = (int32_t) threads[j]; // initialize PC
+    tcbs[j].blocked = 0;        // not blocked
+    tcbs[j].sleep = 0;          // not sleeping
+  }
+
   RunPt = &tcbs[0];      // thread 0 is first to run
-  // initialize stacks
-  SetInitialStack(0);
-  SetInitialStack(1);
-  SetInitialStack(2);
-  SetInitialStack(3);
-  SetInitialStack(4);
-  SetInitialStack(5);
-  // initialize PCs
-  Stacks[0][STACKSIZE-2] = (int32_t) thread0;
-  Stacks[1][STACKSIZE-2] = (int32_t) thread1;
-  Stacks[2][STACKSIZE-2] = (int32_t) thread2;
-  Stacks[3][STACKSIZE-2] = (int32_t) thread3;
-  Stacks[4][STACKSIZE-2] = (int32_t) thread4;
-  Stacks[5][STACKSIZE-2] = (int32_t) thread5;
-  // initialize as not blocked
-  tcbs[0].blocked = 0;
-  tcbs[1].blocked = 0;
-  tcbs[2].blocked = 0;
-  tcbs[3].blocked = 0;
-  tcbs[4].blocked = 0;
-  tcbs[5].blocked = 0;
-  // initialize as not sleeping
-  tcbs[0].sleep = 0;
-  tcbs[1].sleep = 0;
-  tcbs[2].sleep = 0;
-  tcbs[3].sleep = 0;
-  tcbs[4].sleep = 0;
-  tcbs[5].sleep = 0;
   EndCritical(sr);
 
   return 1;               // successful
