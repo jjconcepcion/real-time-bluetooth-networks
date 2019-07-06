@@ -307,7 +307,7 @@ void RealTimeEvents(void){int flag=0;
   // before signalling the periodic tasks
   realCount++;
   if(realCount >= 0){
-		if((realCount%Period0)==0){
+    if((realCount%Period0)==0){
       OS_Signal(PeriodicSemaphore0);
       flag = 1;
 		}
