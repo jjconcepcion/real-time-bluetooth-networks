@@ -7,8 +7,8 @@
 // Hint: Copy solutions from Lab 3 into Lab 4
 #include <stdint.h>
 #include "os.h"
-#include "CortexM.h"
-#include "BSP.h"
+#include "../inc/CortexM.h"
+#include "../inc/BSP.h"
 #include "../inc/tm4c123gh6pm.h"
 
 // function definitions in osasm.s
@@ -17,11 +17,14 @@ void StartOS(void);
 #define NUMTHREADS  8        // maximum number of threads
 #define NUMPERIODIC 2        // maximum number of periodic threads
 #define STACKSIZE   100      // number of 32-bit words in stack per thread
+
 struct tcb{
-  int32_t *sp;       // pointer to stack (valid for threads not running
-  struct tcb *next;  // linked-list pointer
-//*FILL THIS IN****
+  int32_t *sp;		// pointer to stack (valid for threads not running
+  struct tcb *next;	// linked-list pointer
+  int32_t *blocked;	// nonzero if blocked on this semaphore
+  uint32_t sleep;	// nonzero if this thread is sleeping
 };
+
 typedef struct tcb tcbType;
 tcbType tcbs[NUMTHREADS];
 tcbType *RunPt;
@@ -39,13 +42,26 @@ void OS_Init(void){
   BSP_Clock_InitFastest();// set processor clock to fastest speed
 // perform any initializations needed, 
 // set up periodic timer to run runperiodicevents to implement sleeping
-  
+  BSP_PeriodicTask_Init(&runperiodicevents, 1000, 6);
 }
 
 void SetInitialStack(int i){
-  // ****IMPLEMENT THIS**** 
-  // **Same as Lab 2 and Lab 3****
- 
+  Stacks[i][STACKSIZE-1] = 0x01000000;   // Thumb bit 
+  Stacks[i][STACKSIZE-3] = 0x14141414;   // R14 
+  Stacks[i][STACKSIZE-4] = 0x12121212;   // R12 
+  Stacks[i][STACKSIZE-5] = 0x03030303;   // R3 
+  Stacks[i][STACKSIZE-6] = 0x02020202;   // R2 
+  Stacks[i][STACKSIZE-7] = 0x01010101;   // R1 
+  Stacks[i][STACKSIZE-8] = 0x00000000;   // R0 
+  Stacks[i][STACKSIZE-9] = 0x11111111;   // R11 
+  Stacks[i][STACKSIZE-10] = 0x10101010;  // R10 
+  Stacks[i][STACKSIZE-11] = 0x09090909;  // R9 
+  Stacks[i][STACKSIZE-12] = 0x08080808;  // R8 
+  Stacks[i][STACKSIZE-13] = 0x07070707;  // R7 
+  Stacks[i][STACKSIZE-14] = 0x06060606;  // R6 
+  Stacks[i][STACKSIZE-15] = 0x05050505;  // R5 
+  Stacks[i][STACKSIZE-16] = 0x04040404;  // R4 
+  tcbs[i].sp = &Stacks[i][STACKSIZE-16]; // thread stack pointer 
 }
 
 //******** OS_AddThreads ***************
@@ -63,14 +79,42 @@ int OS_AddThreads(void(*thread0)(void), uint32_t p0,
                   void(*thread6)(void), uint32_t p6,
                   void(*thread7)(void), uint32_t p7){
 // **similar to Lab 3. initialize priority field****
- 
+  int32_t sr;
+
+  sr = StartCritical();
+  int i, j;
+  void(*threads[NUMTHREADS])(void) = {
+    thread0, thread1, thread2, thread3, thread4, thread5
+  };
+
+  // initialize TCB circular list (same as RTOS project)
+  for (i = 0; i < NUMTHREADS; i++) {
+    tcbs[i].next = &tcbs[(i+1)%NUMTHREADS];
+  }
+  // initialize TCB
+  for (j = 0; j < NUMTHREADS; j++) {
+    SetInitialStack(j);         // initialize stacks
+    Stacks[j][STACKSIZE-2] = (int32_t) threads[j]; // initialize PC
+    tcbs[j].blocked = 0;        // not blocked
+    tcbs[j].sleep = 0;          // not sleeping
+  }
+
+  RunPt = &tcbs[0];      // thread 0 is first to run
+  EndCritical(sr);
+
   return 1;               // successful
 }
 
+void static decrement_sleep_timer(void) {
+  int i;
+  for (i = 0; i < NUMTHREADS; i++) {
+    if (tcbs[i].sleep)
+      tcbs[i].sleep--;
+  }
+}
 
 void static runperiodicevents(void){
-// ****IMPLEMENT THIS****
-// **DECREMENT SLEEP COUNTERS
+  decrement_sleep_timer(); 
 // In Lab 4, handle periodic events in RealTimeEvents
   
 }
@@ -94,6 +138,10 @@ void Scheduler(void){      // every time slice
 // look at all threads in TCB list choose
 // highest priority thread not blocked and not sleeping 
 // If there are multiple highest priority (not blocked, not sleeping) run these round robin
+  RunPt = RunPt->next; 
+  while (RunPt->blocked || RunPt->sleep) {
+    RunPt = RunPt->next;
+  }
 
 }
 
@@ -114,10 +162,8 @@ void OS_Suspend(void){
 // output: none
 // OS_Sleep(0) implements cooperative multitasking
 void OS_Sleep(uint32_t sleepTime){
-// ****IMPLEMENT THIS****
-// set sleep parameter in TCB, same as Lab 3
-// suspend, stops running
-
+  RunPt->sleep = sleepTime;
+  OS_Suspend();
 }
 
 // ******** OS_InitSemaphore ************
@@ -126,9 +172,7 @@ void OS_Sleep(uint32_t sleepTime){
 //          initial value of semaphore
 // Outputs: none
 void OS_InitSemaphore(int32_t *semaPt, int32_t value){
-// ****IMPLEMENT THIS****
-// Same as Lab 3
- 
+  *semaPt = value;
 }
 
 // ******** OS_Wait ************
@@ -138,9 +182,17 @@ void OS_InitSemaphore(int32_t *semaPt, int32_t value){
 // Inputs:  pointer to a counting semaphore
 // Outputs: none
 void OS_Wait(int32_t *semaPt){
-// ****IMPLEMENT THIS****
-// Same as Lab 3
-  
+  uint32_t sr;
+
+  sr = StartCritical();
+  (*semaPt)--;
+  if (*semaPt < 0) {    // block current thread
+    RunPt->blocked = semaPt;
+    EndCritical(sr);
+    OS_Suspend();
+    return;             // OS_Suspend() has triggered SysTick 
+  }
+  EndCritical(sr);
 }
 
 // ******** OS_Signal ************
@@ -150,12 +202,24 @@ void OS_Wait(int32_t *semaPt){
 // Inputs:  pointer to a counting semaphore
 // Outputs: none
 void OS_Signal(int32_t *semaPt){
-// ****IMPLEMENT THIS****
-// Same as Lab 3
-  
+  uint32_t sr;
+  tcbType *waitPt;
+
+  sr = StartCritical();
+  (*semaPt)++;
+  if (*semaPt <= 0) {   // unblock a waiting thread
+    waitPt = RunPt->next;
+    while (waitPt->blocked != semaPt) {
+      waitPt = waitPt->next;
+    }
+    waitPt->blocked = 0;
+  }
+  EndCritical(sr);
 }
 
 #define FSIZE 10    // can be any size
+#define FIFOSUCCESS 0
+#define FIFOFULL    -1
 uint32_t PutI;      // index of where to put next
 uint32_t GetI;      // index of where to get next
 uint32_t Fifo[FSIZE];
@@ -172,9 +236,10 @@ uint32_t LostData;  // number of lost pieces of data
 // Inputs:  none
 // Outputs: none
 void OS_FIFO_Init(void){
-// ****IMPLEMENT THIS****
-// Same as Lab 3
-  
+  OS_InitSemaphore(&CurrentSize, 0);
+  PutI = 0;
+  GetI = 0;
+  LostData = 0;
 }
 
 // ******** OS_FIFO_Put ************
@@ -185,10 +250,19 @@ void OS_FIFO_Init(void){
 // Inputs:  data to be stored
 // Outputs: 0 if successful, -1 if the FIFO is full
 int OS_FIFO_Put(uint32_t data){
-// ****IMPLEMENT THIS****
-// Same as Lab 3
-	
- return 0; // success
+  int status;
+
+  if (CurrentSize == FSIZE) {
+    LostData++;
+    status = FIFOFULL;
+  } else {
+    Fifo[PutI] = data;
+    PutI = (PutI + 1) % FSIZE;
+    OS_Signal(&CurrentSize);
+    status = FIFOSUCCESS;
+  }
+
+  return status;
 }
 
 // ******** OS_FIFO_Get ************
@@ -199,9 +273,11 @@ int OS_FIFO_Put(uint32_t data){
 // Inputs:  none
 // Outputs: data retrieved
 uint32_t OS_FIFO_Get(void){uint32_t data;
-// ****IMPLEMENT THIS****
-// Same as Lab 3
- return data;
+  OS_Wait(&CurrentSize);    // block if empty
+  data = Fifo[GetI];
+  GetI = (GetI + 1) % FSIZE;
+
+  return data;
 }
 // *****periodic events****************
 int32_t *PeriodicSemaphore0;
