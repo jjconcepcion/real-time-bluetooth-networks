@@ -23,6 +23,7 @@ struct tcb{
   struct tcb *next;	// linked-list pointer
   int32_t *blocked;	// nonzero if blocked on this semaphore
   uint32_t sleep;	// nonzero if this thread is sleeping
+  uint32_t priority;	// lower value is higher priority
 };
 
 typedef struct tcb tcbType;
@@ -84,7 +85,10 @@ int OS_AddThreads(void(*thread0)(void), uint32_t p0,
   sr = StartCritical();
   int i, j;
   void(*threads[NUMTHREADS])(void) = {
-    thread0, thread1, thread2, thread3, thread4, thread5
+    thread0, thread1, thread2, thread3, thread4, thread5, thread6, thread7
+  };
+  uint32_t priorities[NUMTHREADS] = {
+    p0 ,p1, p2, p3, p4, p5, p6, p7
   };
 
   // initialize TCB circular list (same as RTOS project)
@@ -97,6 +101,7 @@ int OS_AddThreads(void(*thread0)(void), uint32_t p0,
     Stacks[j][STACKSIZE-2] = (int32_t) threads[j]; // initialize PC
     tcbs[j].blocked = 0;        // not blocked
     tcbs[j].sleep = 0;          // not sleeping
+    tcbs[j].priority = priorities[j];	// initalize priority
   }
 
   RunPt = &tcbs[0];      // thread 0 is first to run
@@ -134,15 +139,27 @@ void OS_Launch(uint32_t theTimeSlice){
 }
 // runs every ms
 void Scheduler(void){      // every time slice
-// ****IMPLEMENT THIS****
 // look at all threads in TCB list choose
 // highest priority thread not blocked and not sleeping 
 // If there are multiple highest priority (not blocked, not sleeping) run these round robin
-  RunPt = RunPt->next; 
-  while (RunPt->blocked || RunPt->sleep) {
-    RunPt = RunPt->next;
-  }
+  uint32_t max;
+  int higherPriority, notBlocked, notSleeping;
+  tcbType *threadPt, *highestPt;
 
+  max = 0xFFFFFFFF;
+  threadPt = RunPt;
+  do {
+    threadPt = threadPt->next;
+    higherPriority = (threadPt->priority < max);
+    notBlocked = (threadPt->blocked == 0);
+    notSleeping = (threadPt->sleep == 0);
+    if (higherPriority && notBlocked && notSleeping) {
+      highestPt = threadPt;
+      max = threadPt->priority;
+    }
+  } while (threadPt != RunPt);
+  
+  RunPt = highestPt;
 }
 
 //******** OS_Suspend ***************
