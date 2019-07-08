@@ -345,31 +345,33 @@ void OS_PeriodTrigger1_Init(int32_t *semaPt, uint32_t period){
 
 //****edge-triggered event************
 int32_t *edgeSemaphore;
+static const uint32_t BTN1_PIN = 0x00000040;
 // ******** OS_EdgeTrigger_Init ************
 // Initialize button1, PD6, to signal on a falling edge interrupt
 // Inputs:  semaphore to signal
 //          priority
 // Outputs: none
 void OS_EdgeTrigger_Init(int32_t *semaPt, uint8_t priority){
-	edgeSemaphore = semaPt;
-//***IMPLEMENT THIS***
-// 1) activate clock for Port D
-// allow time for clock to stabilize
-// 2) no need to unlock PD6
-// 3) disable analog on PD6
-// 4) configure PD6 as GPIO
-// 5) make PD6 input
-// 6) disable alt funct on PD6
-// disable pull-up on PD6
-// 7) enable digital I/O on PD6  
-// (d) PD6 is edge-sensitive 
-//     PD6 is not both edges 
-//     PD6 is falling edge event 
-// (e) clear PD6 flag
-// (f) arm interrupt on PD6
-// priority on Port D edge trigger is NVIC_PRI0_R	31 – 29
-// enable is bit 3 in NVIC_EN0_R
- }
+  edgeSemaphore = semaPt;
+  SYSCTL_RCGCGPIO_R |= SYSCTL_RCGCGPIO_R3;	// 1) activate clock for Port D
+  // allow time for clock to stabilize
+  while ((SYSCTL_RCGCGPIO_R&SYSCTL_RCGCGPIO_R3) == 0);
+  GPIO_PORTD_CR_R |= BTN1_PIN;		// 2) no need to unlock PD6, allow configuration of PD6
+  GPIO_PORTD_AMSEL_R &= ~BTN1_PIN;	// 3) disable analog on PD6
+  GPIO_PORTD_PCTL_R &= ~0x0F000000;	// 4) configure PD6 as GPIO
+  GPIO_PORTD_DIR_R &= ~BTN1_PIN;	// 5) make PD6 input
+  GPIO_PORTD_AFSEL_R &= ~BTN1_PIN;	// 6) disable alt funct on PD6
+  GPIO_PORTD_PUR_R &= ~BTN1_PIN;	// disable pull-up on PD6
+  GPIO_PORTD_DEN_R |= BTN1_PIN;		// 7) enable digital I/O on PD6
+  GPIO_PORTD_IS_R &= ~BTN1_PIN;		// (d) PD6 is edge-sensitive
+  GPIO_PORTD_IBE_R &= ~BTN1_PIN;	//     PD6 is not both edges
+  GPIO_PORTD_IEV_R &= ~BTN1_PIN;	//     PD6 is falling edge event
+  GPIO_PORTD_ICR_R |= BTN1_PIN;		// (e) clear PD6 flag
+  GPIO_PORTD_IM_R |= BTN1_PIN;		// (f) arm interrupt on PD6
+  // set priority on Port D edge trigger bits 31-29
+  NVIC_PRI0_R = (NVIC_PRI0_R&0x1FFFFFFF)|(priority << 29);
+  NVIC_EN0_R |= 0x00000008;	// enable is bit 3 in NVIC_EN0_R
+}
 
 // ******** OS_EdgeTrigger_Restart ************
 // restart button1 to signal on a falling edge interrupt
@@ -377,15 +379,15 @@ void OS_EdgeTrigger_Init(int32_t *semaPt, uint8_t priority){
 // Inputs:  none
 // Outputs: none
 void OS_EdgeTrigger_Restart(void){
-//***IMPLEMENT THIS***
-// rearm interrupt 3 in NVIC
-// clear flag6
+  GPIO_PORTD_IM_R |= BTN1_PIN;		// rearm interrupt 3 in NVIC
+  GPIO_PORTD_ICR_R |= BTN1_PIN;		// clear flag6
 }
 void GPIOPortD_Handler(void){
-//***IMPLEMENT THIS***
-	// step 1 acknowledge by clearing flag
-  // step 2 signal semaphore (no need to run scheduler)
-  // step 3 disarm interrupt to prevent bouncing to create multiple signals
+  if (GPIO_PORTD_RIS_R & BTN1_PIN) {
+    GPIO_PORTD_ICR_R |= BTN1_PIN;	// step 1 acknowledge by clearing flag
+    OS_Signal(edgeSemaphore);		// step 2 signal semaphore (no need to run scheduler)
+    GPIO_PORTD_IM_R &= ~BTN1_PIN;	// step 3 disarm interrupt to prevent bouncing to create multiple signals
+  }
 }
 
 
