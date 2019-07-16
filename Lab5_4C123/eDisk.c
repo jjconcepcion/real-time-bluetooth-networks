@@ -114,7 +114,7 @@ enum DRESULT eDisk_WriteSector(
     return RES_PARERR;
    
   count = SECTOR_SIZE / 4;
-  writes = Flash_FastWrite((uint32_t *) buff, start_addr, count);
+  writes = Flash_WriteArray((uint32_t *) buff, start_addr, count);
   if (writes != count)
     return RES_ERROR;
 
