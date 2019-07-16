@@ -6,6 +6,8 @@
 #include <stdint.h>
 #include "eDisk.h"
 
+#define EOF 0xFF
+
 uint8_t Buff[512]; // temporary buffer used during file I/O
 uint8_t Directory[256], FAT[256];
 int32_t bDirectoryLoaded =0; // 0 means disk on ROM is complete, 1 means RAM version active
@@ -48,10 +50,15 @@ void MountDirectory(void){
 // Note: This function will loop forever without returning
 // if the file has no end (i.e. the FAT is corrupted).
 uint8_t lastsector(uint8_t start){
-// **write this function**
+  uint8_t last, next;
+
+  last = start;
+  while (FAT[last] != EOF) {    // Assumes FAT[255] = 255 (EOF)
+    next = FAT[last];
+    last = next;
+  }
   
-	
-  return 0; // replace this line
+  return last; 
 }
 
 // Return the index of the first free sector.
