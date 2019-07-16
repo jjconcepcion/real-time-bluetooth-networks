@@ -26,6 +26,7 @@
 
 #define ERROR                   1           // Value returned if failure
 #define NOERROR                 0           // Value returned if success
+#define FLASH_ERASE_BLOCKSIZE   1024        // smallest num of bytes erasable on TM4C123
 
 //------------Flash_Init------------
 // This function was critical to the write and erase

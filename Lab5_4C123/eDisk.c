@@ -70,9 +70,21 @@ enum DRESULT eDisk_ReadSector(
 // starting ROM address of the sector is	EDISK_ADDR_MIN + 512*sector
 // return RES_PARERR if EDISK_ADDR_MIN + 512*sector > EDISK_ADDR_MAX
 // copy 512 bytes from ROM (disk) into RAM (buff)
-// **write this function**
- 
-			
+  uintptr_t start_addr;
+  uint16_t i;
+  uint8_t *read_ptr;
+
+  start_addr = EDISK_ADDR_MIN + SECTOR_SIZE * sector;
+  if (start_addr > EDISK_ADDR_MAX)
+    return RES_PARERR;
+  
+  read_ptr = (uint8_t *) start_addr;
+  for (i = 0; i < SECTOR_SIZE; i++) {
+    *buff = *read_ptr;
+    buff++;
+    read_ptr++;
+  }
+
   return RES_OK;
 }
 
@@ -93,9 +105,19 @@ enum DRESULT eDisk_WriteSector(
 // return RES_PARERR if EDISK_ADDR_MIN + 512*sector > EDISK_ADDR_MAX
 // write 512 bytes from RAM (buff) into ROM (disk)
 // you can use Flash_FastWrite or Flash_WriteArray
-// **write this function**
-  
-			
+  uint32_t start_addr;
+  uint16_t count;       // number of 32-bit words per sector			
+  int writes;           // number of successful writes to flash
+
+  start_addr = EDISK_ADDR_MIN + SECTOR_SIZE * sector;
+  if (start_addr > EDISK_ADDR_MAX)
+    return RES_PARERR;
+   
+  count = SECTOR_SIZE / 4;
+  writes = Flash_FastWrite((uint32_t *) buff, start_addr, count);
+  if (writes != count)
+    return RES_ERROR;
+
   return RES_OK;
 }
 
@@ -110,9 +132,16 @@ enum DRESULT eDisk_WriteSector(
 //  RES_PARERR    4: Invalid Parameter
 enum DRESULT eDisk_Format(void){
 // erase all flash from EDISK_ADDR_MIN to EDISK_ADDR_MAX
-// **write this function**
-  
-	
+  uint32_t addr;
+  uint32_t offset;  // offset to next erasable block
+  int result;       // flash erase status
+
+  offset = FLASH_ERASE_BLOCKSIZE/4;
+  for (addr = EDISK_ADDR_MIN; addr < EDISK_ADDR_MAX; addr += offset) {
+    result = Flash_Erase(addr);
+    if (result == ERROR)
+      return RES_ERROR;
+  }
 	
   return RES_OK;
 }
