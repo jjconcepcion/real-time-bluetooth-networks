@@ -25,10 +25,22 @@ void MountDirectory(void){
 //    read disk sector 255 and populate Directory and FAT
 //    set bDirectoryLoaded=1
 // if bDirectoryLoaded is 1, simply return
-// **write this function**
+  uint8_t disk_read_status;
+  uint16_t i;
 
-  
-	
+  if (bDirectoryLoaded == 1)
+    return;
+
+  disk_read_status = eDisk_ReadSector(Buff, 255);
+  if (disk_read_status != RES_OK)
+    return;
+
+  for (i = 0; i < 256; i++) {
+    Directory[i] = Buff[i];
+    FAT[i] = Buff[i+256];
+  }
+
+  bDirectoryLoaded = 1;
 }
 
 // Return the index of the last sector in the file
