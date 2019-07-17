@@ -132,10 +132,19 @@ uint8_t OS_File_New(void){
 // Outputs: 0 if empty, otherwise the number of sectors
 // Errors:  none
 uint8_t OS_File_Size(uint8_t num){
-// **write this function**
-  
+  uint8_t count,
+          sector,
+          next;
+
+  count = 0;
+  sector = Directory[num];
+  while (FAT[sector] != EOF) {
+    count++;
+    next = FAT[sector];
+    sector = next;
+  }
 	
-  return 0; // replace this line
+  return count; // replace this line
 }
 
 //********OS_File_Append*************
