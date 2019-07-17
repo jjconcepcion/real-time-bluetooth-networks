@@ -8,6 +8,7 @@
 
 #define EOF 0xFF
 #define NULLFILE 0xFF
+#define END_OF_DIRECTORY 0xFF
 
 uint8_t Buff[512]; // temporary buffer used during file I/O
 uint8_t Directory[256], FAT[256];
@@ -103,10 +104,18 @@ uint8_t appendfat(uint8_t num, uint8_t n){
 // Outputs: number of a new file
 // Errors: return 255 on failure or disk full
 uint8_t OS_File_New(void){
-// **write this function**
-  
+  uint8_t filenum;
+
+  filenum = 0;
+  while (1) {
+    if (filenum == END_OF_DIRECTORY)
+      break;
+    if (Directory[filenum] == NULLFILE)
+      break;
+    filenum++;
+  }
 	
-  return 255;
+  return filenum;
 }
 
 //********OS_File_Size*************
