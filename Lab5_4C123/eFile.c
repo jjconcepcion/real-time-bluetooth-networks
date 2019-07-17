@@ -114,6 +114,8 @@ uint8_t appendfat(uint8_t num, uint8_t n){
 uint8_t OS_File_New(void){
   uint8_t filenum;
 
+  MountDirectory();
+
   filenum = 0;
   while (1) {
     if (filenum == END_OF_DIRECTORY)
