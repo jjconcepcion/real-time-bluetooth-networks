@@ -7,6 +7,7 @@
 #include "eDisk.h"
 
 #define EOF 0xFF
+#define NULLFILE 0xFF
 
 uint8_t Buff[512]; // temporary buffer used during file I/O
 uint8_t Directory[256], FAT[256];
@@ -66,9 +67,21 @@ uint8_t lastsector(uint8_t start){
 // if a file has no end or if (Directory[255] != 255)
 // (i.e. the FAT is corrupted).
 uint8_t findfreesector(void){
-// **write this function**
+  uint8_t file,
+          filenum,
+          eof,
+          freesector;
+
+  freesector = 0;
+  filenum = 0;
+  file = Directory[filenum];
+  while (file != NULLFILE) {
+    eof = lastsector(file);
+    freesector = (uint8_t) max(freesector, eof+1);
+    file = Directory[++filenum];
+  }
   
-  return 0; // replace this line
+  return freesector;
 }
 
 // Append a sector index 'n' at the end of file 'num'.
