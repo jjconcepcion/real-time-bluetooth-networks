@@ -144,7 +144,7 @@ uint8_t OS_File_Size(uint8_t num){
     sector = next;
   }
 	
-  return count; // replace this line
+  return count;
 }
 
 //********OS_File_Append*************
@@ -163,7 +163,7 @@ uint8_t OS_File_Append(uint8_t num, uint8_t buf[512]){
   eDisk_WriteSector(buf, new_sector);   // write to disk
   appendfat(num, new_sector);           // updates FAT and Directory as required
   
-  return 0; // replace this line
+  return 0;
 }
 
 //********OS_File_Read*************
