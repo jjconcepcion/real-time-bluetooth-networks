@@ -9,6 +9,7 @@
 #define EOF 0xFF
 #define NULLFILE 0xFF
 #define END_OF_DIRECTORY 0xFF
+#define END_OF_FAT 0xFF
 
 uint8_t Buff[512]; // temporary buffer used during file I/O
 uint8_t Directory[256], FAT[256];
@@ -92,10 +93,17 @@ uint8_t findfreesector(void){
 // Note: This function will loop forever without returning
 // if the file has no end (i.e. the FAT is corrupted).
 uint8_t appendfat(uint8_t num, uint8_t n){
-// **write this function**
-  
+  uint8_t file, eof;
+
+  file = Directory[num];
+  if (file == NULLFILE) {   // appending to new file
+    Directory[num] = n;
+  } else {                  // append to existing file 
+    eof = lastsector(file);
+    FAT[eof] = n;
+  }
 	
-  return 0; // replace this line
+  return 0;
 }
 
 //********OS_File_New*************
@@ -137,7 +145,14 @@ uint8_t OS_File_Size(uint8_t num){
 // Outputs: 0 if successful
 // Errors:  255 on failure or disk full
 uint8_t OS_File_Append(uint8_t num, uint8_t buf[512]){
-// **write this function**
+  uint8_t new_sector;
+
+  new_sector = findfreesector();
+  if (new_sector == END_OF_FAT)         // disk is full
+    return END_OF_FAT;
+
+  eDisk_WriteSector(buf, new_sector);   // write to disk
+  appendfat(num, new_sector);           // updates FAT and Directory as required
   
   return 0; // replace this line
 }
