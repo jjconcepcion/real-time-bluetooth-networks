@@ -233,7 +233,10 @@ uint8_t OS_File_Flush(void){
 uint8_t OS_File_Format(void){
 // call eDiskFormat
 // clear bDirectoryLoaded to zero
-// **write this function**
+  uint8_t format_status;
 
-  return 0; // replace this line
+  format_status = eDisk_Format();
+  bDirectoryLoaded = 0;
+
+  return (format_status != RES_OK) ? 255: 0;
 }
