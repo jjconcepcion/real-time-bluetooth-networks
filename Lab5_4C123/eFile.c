@@ -139,8 +139,11 @@ uint8_t OS_File_Size(uint8_t num){
           sector,
           next;
 
-  count = 0;
   sector = Directory[num];
+  if (sector == 255)
+    return 0;
+
+  count = 1;
   while (FAT[sector] != EOF) {
     count++;
     next = FAT[sector];
@@ -185,7 +188,7 @@ uint8_t OS_File_Read(uint8_t num, uint8_t location,
           disk_read_status;
 
   size = OS_File_Size(num);
-  if (size == 0 || location > size)
+  if (size == 0 || location >= size)
     file_read_status = FILE_READ_ERR;
   
   i = 0;
