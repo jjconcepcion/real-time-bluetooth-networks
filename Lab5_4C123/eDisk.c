@@ -136,7 +136,7 @@ enum DRESULT eDisk_Format(void){
   uint32_t offset;  // offset to next erasable block
   int result;       // flash erase status
 
-  offset = FLASH_ERASE_BLOCKSIZE/4;
+  offset = FLASH_ERASE_BLOCKSIZE;
   for (addr = EDISK_ADDR_MIN; addr < EDISK_ADDR_MAX; addr += offset) {
     result = Flash_Erase(addr);
     if (result == ERROR)
