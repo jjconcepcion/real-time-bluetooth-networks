@@ -10,6 +10,7 @@
 #define NULLFILE 0xFF
 #define END_OF_DIRECTORY 0xFF
 #define END_OF_FAT 0xFF
+#define FILE_READ_ERR 0xFF
 
 uint8_t Buff[512]; // temporary buffer used during file I/O
 uint8_t Directory[256], FAT[256];
@@ -177,9 +178,28 @@ uint8_t OS_File_Append(uint8_t num, uint8_t buf[512]){
 // Errors:  255 on failure because no data
 uint8_t OS_File_Read(uint8_t num, uint8_t location,
                      uint8_t buf[512]){
-// **write this function**
+  uint8_t size,
+          disk_addr,
+          i,
+          file_read_status,
+          disk_read_status;
+
+  size = OS_File_Size(num);
+  if (size == 0 || location > size)
+    file_read_status = FILE_READ_ERR;
   
-  return 0; // replace this line
+  i = 0;
+  disk_addr = Directory[num];
+  while (i < location) {
+    disk_addr = FAT[disk_addr];
+    i++;
+  }
+
+  disk_read_status = eDisk_ReadSector(buf, disk_addr);
+  if (disk_read_status != RES_OK)
+    file_read_status = FILE_READ_ERR;
+
+  return file_read_status;
 }
 
 //********OS_File_Flush*************
