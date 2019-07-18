@@ -209,9 +209,20 @@ uint8_t OS_File_Read(uint8_t num, uint8_t location,
 // Outputs: 0 if success
 // Errors:  255 on disk write failure
 uint8_t OS_File_Flush(void){
-// **write this function**
+  uint16_t disk_write_status,
+           i; 
 
-  return 0; // replace this line
+  if (bDirectoryLoaded == 0)
+    return 255;
+
+  for (i = 0; i < 256; i++) {
+    Buff[i] = Directory[i];
+    Buff[i+256] = FAT[i];
+  }
+ 
+  disk_write_status = eDisk_WriteSector(Buff, 255);
+
+  return (disk_write_status != RES_OK) ? 255 : 0;
 }
 
 //********OS_File_Format*************
