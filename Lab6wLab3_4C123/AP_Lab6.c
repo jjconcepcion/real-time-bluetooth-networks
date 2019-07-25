@@ -50,6 +50,17 @@ extern const uint32_t NOTIFYMAXCHARACTERISTICS;
 extern uint32_t NotifyCharacteristicCount;
 extern NotifyCharacteristic_t NotifyCharacteristicList[];
 //**************Lab 6 routines*******************
+// **********GetMsgSize**********
+// helper function, returns length of NPI message frame
+// Inputs: pointer to message
+// Outputs: message length
+uint32_t GetMsgSize(const uint8_t *msg) {
+  uint32_t payloadSize;
+  // 2 bytes litte-endian payload length field
+  payloadSize = (msg[2] << 8) + msg[1];
+  // payload length + 6 bytes for SOF(1) + length(2) + Command(2) + FCS(1) fields
+  return payloadSize + 6;
+}
 // **********SetFCS**************
 // helper function, add check byte to message
 // assumes every byte in the message has been set except the FCS
@@ -59,9 +70,16 @@ extern NotifyCharacteristic_t NotifyCharacteristicList[];
 //         stores the FCS into message itself
 // Outputs: none
 void SetFCS(uint8_t *msg){
-//****You implement this function as part of Lab 6*****
+  uint8_t fcs,
+          msgSize,
+          i; 
 
-  
+  fcs = 0;
+  msgSize = GetMsgSize(msg);
+  for (i = 1; i < msgSize-1; i++)
+    fcs ^= msg[i];
+
+  msg[msgSize-1] = fcs;
 }
 //*************BuildGetStatusMsg**************
 // Create a Get Status message, used in Lab 6
