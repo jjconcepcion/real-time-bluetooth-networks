@@ -479,14 +479,14 @@ int main(void){
   EnableInterrupts(); // interrupts needed for grader to run
   while(1){
     for(int i = 0; i < 1000; i++){ // runs at about 1 kHz
-			Task0();				// sample microphone
-			if(i%100 == 0){ // runs at about 10 Hz
-				Task1(); 		 	// sample accelerometer
-				Task3();  		// check the buttons and change mode if pressed
-				Task4();  		// update the plot
-			}
-			BSP_Delay1ms(1);
-		}
+      Task0();		// sample microphone
+      if(i%100 == 0){	// runs at about 10 Hz
+	Task1(); 	// sample accelerometer
+	Task3();  	// check the buttons and change mode if pressed
+	Task4();	// update the plot
+      }
+      BSP_Delay1ms(1);
+  }
     Task2();   // sample light at 1 Hz
     Task5();   // update the LCD text at 1 Hz
     Time++;    // 1 Hz
