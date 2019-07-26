@@ -211,14 +211,26 @@ int Lab6_RegisterService(void){ int r; uint8_t sendMsg[8];
 // Output none
 // build the necessary NPI message that will add a characteristic value
 void BuildAddCharValueMsg(uint16_t uuid,  
-  uint8_t permission, uint8_t properties, uint8_t *msg){
-// set RFU to 0 and
-// set the maximum length of the attribute value=512
-// for a hint see NPI_AddCharValue in AP.c
-// for a hint see first half of AP_AddCharacteristic and first half of AP_AddNotifyCharacteristic
-//****You implement this function as part of Lab 6*****
-  
-    
+      uint8_t permission, uint8_t properties, uint8_t *msg){
+  extern uint8_t NPI_AddCharValue[];
+  uint8_t uuid0,        // uuid least significant byte
+          uuid1,        // uuid most significant byte 
+          i;
+  i = 0;
+  while (i < 5) {       // poulates SOF, Length, Command fields
+    msg[i] = NPI_AddCharValue[i];
+    i++;
+  }
+  msg[5] = permission; 
+  msg[6] = properties;  // <-- set GATT properties
+  msg[7] = 0x00;        // -->
+  msg[8] = 0x00;        // set RFU to 0
+  msg[9] = 0x00;        // <-- set the maximum length of the attribute value=512
+  msg[10] = 0x02;        // -->
+  ParseUuidBytes(uuid, &uuid1, &uuid0);
+  msg[11] = uuid0;
+  msg[12] = uuid1;
+  SetFCS(msg);
 }
 
 //*************BuildAddCharDescriptorMsg**************
