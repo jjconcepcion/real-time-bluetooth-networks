@@ -81,16 +81,6 @@ void SetFCS(uint8_t *msg){
 
   msg[msgSize-1] = fcs;
 }
-// **********ParseUuidBytes**************
-// helper function, parses UUID into most significant and least significant bytes
-// Inputs: uuid 
-//         pointer to storage for most significant byte 
-//         pointer to storage for least significant byte 
-// Outputs: none
-void ParseUuidBytes(const uint16_t uuid, uint8_t *msb, uint8_t *lsb) {
-  *lsb = (uint8_t) (uuid & 0xFF);
-  *msb = (uint8_t) (uuid >> 8);
-}
 // **********SetLittleEndian**************
 // helper function, sets sets two bytes of message to little-endian value
 // Inputs: 16-bit value 
@@ -160,18 +150,14 @@ uint32_t Lab6_GetVersion(void){volatile int r;uint8_t sendMsg[8];
 // build the necessary NPI message that will add a service
 void BuildAddServiceMsg(uint16_t uuid, uint8_t *msg){
   extern uint8_t NPI_AddService[];
-  uint8_t uuid0,    // uuid least significant byte
-          uuid1,    // uuid most significant byte 
-          i;
+  uint8_t i;
 
   i = 0;
   while (i < 6) {       // poulates SOF, Length, Command, Command Parameter fields
     msg[i] = NPI_AddService[i];
     i++;  
   }
-  ParseUuidBytes(uuid, &uuid1, &uuid0);
-  msg[i] = uuid0;
-  msg[i+1] = uuid1;
+  SetLitteEndian(uuid, &msg[6]);
   SetFCS(msg);
 }
 //*************Lab6_AddService**************
@@ -222,23 +208,20 @@ int Lab6_RegisterService(void){ int r; uint8_t sendMsg[8];
 void BuildAddCharValueMsg(uint16_t uuid,  
       uint8_t permission, uint8_t properties, uint8_t *msg){
   extern uint8_t NPI_AddCharValue[];
-  uint8_t uuid0,        // uuid least significant byte
-          uuid1,        // uuid most significant byte 
-          i;
+  static const uint16_t AttrValueMaxLength = 512;
+  static const uint8_t RFU = 0x00;
+  uint8_t i;
+
   i = 0;
   while (i < 5) {       // poulates SOF, Length, Command fields
     msg[i] = NPI_AddCharValue[i];
     i++;
   }
   msg[5] = permission; 
-  msg[6] = properties;  // <-- set GATT properties
-  msg[7] = 0x00;        // -->
-  msg[8] = 0x00;        // set RFU to 0
-  msg[9] = 0x00;        // <-- set the maximum length of the attribute value=512
-  msg[10] = 0x02;        // -->
-  ParseUuidBytes(uuid, &uuid1, &uuid0);
-  msg[11] = uuid0;
-  msg[12] = uuid1;
+  SetLitteEndian(properties, &msg[6]);
+  msg[8] = RFU;
+  SetLitteEndian(AttrValueMaxLength, &msg[9]);
+  SetLitteEndian(uuid, &msg[11]);
   SetFCS(msg);
 }
 
