@@ -81,6 +81,16 @@ void SetFCS(uint8_t *msg){
 
   msg[msgSize-1] = fcs;
 }
+// **********ParseUuidBytes**************
+// helper function, parses UUID into most significant and least significant bytes
+// Inputs: uuid 
+//         pointer to storage for most significant byte 
+//         pointer to storage for least significant byte 
+// Outputs: none
+void ParseUuidBytes(const uint16_t uuid, uint8_t *msb, uint8_t *lsb) {
+  *lsb = (uint8_t) (uuid & 0xFF);
+  *msb = (uint8_t) (uuid >> 8);
+}
 //*************BuildGetStatusMsg**************
 // Create a Get Status message, used in Lab 6
 // Inputs pointer to empty buffer of at least 6 bytes
@@ -145,14 +155,12 @@ void BuildAddServiceMsg(uint16_t uuid, uint8_t *msg){
           uuid1,    // uuid most significant byte 
           i;
 
-  uuid0 = (uint8_t) (uuid & 0xFF);
-  uuid1 = (uint8_t) (uuid >> 8);
-  
   i = 0;
   while (i < 6) {       // poulates SOF, Length, Command, Command Parameter fields
     msg[i] = NPI_AddService[i];
     i++;  
   }
+  ParseUuidBytes(uuid, &uuid1, &uuid0);
   msg[i] = uuid0;
   msg[i+1] = uuid1;
   SetFCS(msg);
