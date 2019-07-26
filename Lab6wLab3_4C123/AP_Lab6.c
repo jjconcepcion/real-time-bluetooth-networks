@@ -115,10 +115,12 @@ uint32_t Lab6_GetStatus(void){volatile int r; uint8_t sendMsg[8];
 // Output none
 // build the necessary NPI message that will Get Status
 void BuildGetVersionMsg(uint8_t *msg){
-// hint: see NPI_GetVersion in AP.c
-//****You implement this function as part of Lab 6*****
+  extern const uint8_t NPI_GetVersion[];
+  uint32_t msgSize, i;
   
-  
+  msgSize = GetMsgSize(NPI_GetVersion);
+  for (i = 0; i < msgSize; i++)
+    msg[i] = NPI_GetVersion[i];
 }
 //*************Lab6_GetVersion**************
 // Get version of the SNP application running on the CC2650, used in Lab 6
