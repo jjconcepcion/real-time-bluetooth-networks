@@ -140,9 +140,22 @@ uint32_t Lab6_GetVersion(void){volatile int r;uint8_t sendMsg[8];
 // Output none
 // build the necessary NPI message that will add a service
 void BuildAddServiceMsg(uint16_t uuid, uint8_t *msg){
-//****You implement this function as part of Lab 6*****
+  extern uint8_t NPI_AddService[];
+  uint8_t uuid0,    // uuid least significant byte
+          uuid1,    // uuid most significant byte 
+          i;
+
+  uuid0 = (uint8_t) (uuid & 0xFF);
+  uuid1 = (uint8_t) (uuid >> 8);
   
-  
+  i = 0;
+  while (i < 6) {       // poulates SOF, Length, Command, Command Parameter fields
+    msg[i] = NPI_AddService[i];
+    i++;  
+  }
+  msg[i] = uuid0;
+  msg[i+1] = uuid1;
+  SetFCS(msg);
 }
 //*************Lab6_AddService**************
 // Add a service, used in Lab 6
