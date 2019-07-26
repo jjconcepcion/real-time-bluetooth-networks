@@ -91,6 +91,15 @@ void ParseUuidBytes(const uint16_t uuid, uint8_t *msb, uint8_t *lsb) {
   *lsb = (uint8_t) (uuid & 0xFF);
   *msb = (uint8_t) (uuid >> 8);
 }
+// **********SetLittleEndian**************
+// helper function, sets sets two bytes of message to little-endian value
+// Inputs: 16-bit value 
+//         pointer to message
+// Outputs: none
+void SetLitteEndian(const uint16_t value, uint8_t *msg) {
+  msg[0] = (uint8_t) (value & 0xFF);
+  msg[1] = (uint8_t) (value >> 8);
+}
 //*************BuildGetStatusMsg**************
 // Create a Get Status message, used in Lab 6
 // Inputs pointer to empty buffer of at least 6 bytes
