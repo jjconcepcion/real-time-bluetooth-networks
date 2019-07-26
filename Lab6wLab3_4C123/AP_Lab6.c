@@ -174,9 +174,13 @@ int Lab6_AddService(uint16_t uuid){ int r; uint8_t sendMsg[12];
 // Output none
 // build the necessary NPI message that will register a service
 void BuildRegisterServiceMsg(uint8_t *msg){
-//****You implement this function as part of Lab 6*****
+  extern const uint8_t NPI_Register[];
+  uint32_t msgSize, i;
   
-  
+  msgSize = GetMsgSize(NPI_Register);
+  for (i = 0; i < msgSize-1; i++)
+    msg[i] = NPI_Register[i];
+  SetFCS(msg);
 }
 //*************Lab6_RegisterService**************
 // Register a service, used in Lab 6
