@@ -56,7 +56,7 @@ extern NotifyCharacteristic_t NotifyCharacteristicList[];
 // Outputs: message length
 uint32_t GetMsgSize(const uint8_t *msg) {
   uint32_t payloadSize;
-  // 2 bytes litte-endian payload length field
+  // 2 bytes little-endian payload length field
   payloadSize = (msg[2] << 8) + msg[1];
   // payload length + 6 bytes for SOF(1) + length(2) + Command(2) + FCS(1) fields
   return payloadSize + 6;
@@ -86,7 +86,7 @@ void SetFCS(uint8_t *msg){
 // Inputs: 16-bit value 
 //         pointer to message
 // Outputs: none
-void SetLitteEndian(const uint16_t value, uint8_t *msg) {
+void SetLittleEndian(const uint16_t value, uint8_t *msg) {
   msg[0] = (uint8_t) (value & 0xFF);
   msg[1] = (uint8_t) (value >> 8);
 }
@@ -157,7 +157,7 @@ void BuildAddServiceMsg(uint16_t uuid, uint8_t *msg){
     msg[i] = NPI_AddService[i];
     i++;  
   }
-  SetLitteEndian(uuid, &msg[6]);
+  SetLittleEndian(uuid, &msg[6]);
   SetFCS(msg);
 }
 //*************Lab6_AddService**************
@@ -218,10 +218,10 @@ void BuildAddCharValueMsg(uint16_t uuid,
     i++;
   }
   msg[5] = permission; 
-  SetLitteEndian(properties, &msg[6]);
+  SetLittleEndian(properties, &msg[6]);
   msg[8] = RFU;
-  SetLitteEndian(AttrValueMaxLength, &msg[9]);
-  SetLitteEndian(uuid, &msg[11]);
+  SetLittleEndian(AttrValueMaxLength, &msg[9]);
+  SetLittleEndian(uuid, &msg[11]);
   SetFCS(msg);
 }
 
