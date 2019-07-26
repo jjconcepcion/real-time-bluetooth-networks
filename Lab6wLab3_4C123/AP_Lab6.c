@@ -87,10 +87,12 @@ void SetFCS(uint8_t *msg){
 // Output none
 // build the necessary NPI message that will Get Status
 void BuildGetStatusMsg(uint8_t *msg){
-// hint: see NPI_GetStatus in AP.c
-//****You implement this function as part of Lab 6*****
-
+  extern const uint8_t NPI_GetStatus[];
+  uint32_t msgSize, i;
   
+  msgSize = GetMsgSize(NPI_GetStatus);
+  for (i = 0; i < msgSize; i++)
+    msg[i] = NPI_GetStatus[i];
 }
 //*************Lab6_GetStatus**************
 // Get status of connection, used in Lab 6
