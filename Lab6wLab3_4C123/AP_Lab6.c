@@ -152,11 +152,8 @@ void BuildAddServiceMsg(uint16_t uuid, uint8_t *msg){
   extern uint8_t NPI_AddService[];
   uint8_t i;
 
-  i = 0;
-  while (i < 6) {       // poulates SOF, Length, Command, Command Parameter fields
+  for (i = 0; i < 6; i++)   // poulates SOF, Length, Command, Command Parameter fields
     msg[i] = NPI_AddService[i];
-    i++;  
-  }
   SetLittleEndian(uuid, &msg[6]);
   SetFCS(msg);
 }
@@ -212,11 +209,8 @@ void BuildAddCharValueMsg(uint16_t uuid,
   static const uint8_t RFU = 0x00;
   uint8_t i;
 
-  i = 0;
-  while (i < 5) {       // poulates SOF, Length, Command fields
+  for (i = 0; i < 5; i++)   // poulates SOF, Length, Command fields
     msg[i] = NPI_AddCharValue[i];
-    i++;
-  }
   msg[5] = permission; 
   SetLittleEndian(properties, &msg[6]);
   msg[8] = RFU;
