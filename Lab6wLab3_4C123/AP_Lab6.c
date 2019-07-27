@@ -232,13 +232,30 @@ void BuildAddCharValueMsg(uint16_t uuid,
 // Output none
 // build the necessary NPI message that will add a Descriptor Declaration
 void BuildAddCharDescriptorMsg(char name[], uint8_t *msg){
-// set length and maxlength to the string length
-// set the permissions on the string to read
-// for a hint see NPI_AddCharDescriptor in AP.c
-// for a hint see second half of AP_AddCharacteristic
-//****You implement this function as part of Lab 6*****
-  
-  
+  extern uint8_t NPI_AddCharDescriptor[];
+  uint8_t stringLength,
+          msgLength,
+          i;
+  char *ch;
+
+  // poulate SOF, Command, Command Parameter fields
+  for (i = 0; i < 7; i++)
+    msg[i] = NPI_AddCharDescriptor[i]; 
+  // calculate string length including null-terminator
+  stringLength = 0;
+  for (ch = name; *ch; ch++ )
+    stringLength++;
+  stringLength++;
+  // Set length field
+  msgLength = stringLength + 6;
+  SetLittleEndian(msgLength, &msg[1]);
+  // Set max length and initial length of user description string
+  SetLittleEndian(stringLength, &msg[7]);
+  SetLittleEndian(stringLength, &msg[9]);
+  // Set user description string data
+  for (i = 0, ch = name; i < stringLength; i++, ch++)
+    msg[11+i] = *ch;
+  SetFCS(msg);
 }
 
 //*************Lab6_AddCharacteristic**************
