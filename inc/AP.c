@@ -222,6 +222,17 @@ uint8_t NPI_AddCharDescriptor[] = {
   'C','h','a','r','a','c','t','e','r','i','s','t','i','c',' ','0',0, // Initial user description string
   0x0C,0,0,0};    // FCS (calculated by AP_SendMessageResponse)
 
+const uint8_t NPI_AddCharDescriptor4[] = {   
+  SOF,12,0x00,    // length = 12
+  0x35,0x83,      // SNP Add Characteristic Descriptor Declaration
+  0x84,           // User Description String+CCCD
+  0x03,           // CCCD parameters read+write
+  0x01,           // GATT Read Permissions
+  0x06,0x00,      // Maximum Possible length of the user description string
+  0x06,0x00,      // Initial length of the user description string
+  'C','o','u','n','t',0, // Initial user description string
+  0x0E};          // FCS (calculated by AP_SendMessageResponse)
+
 //------------AP_Init------------
 // Initialize serial link and GPIO to Bluetooth module
 // see GPIO.c file for hardware connections 
