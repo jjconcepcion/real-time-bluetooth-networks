@@ -90,6 +90,21 @@ void SetLittleEndian(const uint16_t value, uint8_t *msg) {
   msg[0] = (uint8_t) (value & 0xFF);
   msg[1] = (uint8_t) (value >> 8);
 }
+
+// **********StrLen**************
+// helper function, calculates length of string
+// Inputs: pointer to string
+// Outputs: length
+uint32_t StrLen(const char *str) {
+  uint32_t length;
+  const char *ch;
+
+  length = 0;
+  for (ch = str; *ch; ch++ )
+    length++;
+
+  return length;
+}
 //*************BuildGetStatusMsg**************
 // Create a Get Status message, used in Lab 6
 // Inputs pointer to empty buffer of at least 6 bytes
@@ -236,10 +251,7 @@ void BuildAddCharDescriptorMsg(char name[], uint8_t *msg){
   for (i = 0; i < 7; i++)
     msg[i] = NPI_AddCharDescriptor[i]; 
   // calculate string length including null-terminator
-  stringLength = 0;
-  for (ch = name; *ch; ch++ )
-    stringLength++;
-  stringLength++;
+  stringLength = (uint8_t) StrLen(name) + 1;
   // Set length field
   msgLength = stringLength + 6;
   SetLittleEndian(msgLength, &msg[1]);
