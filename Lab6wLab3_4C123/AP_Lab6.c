@@ -8,7 +8,7 @@
 
 #include <stdint.h>
 #include "../inc/UART0.h"
-#include "../inc/UART1.h"
+#include "../inc/UART1.h" 
 #include "../inc/AP.h"
 #include "AP_Lab6.h"
 //**debug macros**APDEBUG defined in AP.h********
@@ -49,6 +49,12 @@ typedef struct NotifyCharacteristics{
 extern const uint32_t NOTIFYMAXCHARACTERISTICS;
 extern uint32_t NotifyCharacteristicCount;
 extern NotifyCharacteristic_t NotifyCharacteristicList[];
+extern const uint8_t NPI_Register[];
+extern const uint8_t NPI_GetVersion[];
+extern const uint8_t NPI_GetStatus[];
+extern uint8_t NPI_AddService[];
+extern uint8_t NPI_AddCharValue[];
+extern uint8_t NPI_AddCharDescriptor[];
 //**************Lab 6 routines*******************
 // **********GetMsgSize**********
 // helper function, returns length of NPI message frame
@@ -111,7 +117,6 @@ uint32_t StrLen(const char *str) {
 // Output none
 // build the necessary NPI message that will Get Status
 void BuildGetStatusMsg(uint8_t *msg){
-  extern const uint8_t NPI_GetStatus[];
   uint32_t msgSize, i;
   
   msgSize = GetMsgSize(NPI_GetStatus);
@@ -139,7 +144,6 @@ uint32_t Lab6_GetStatus(void){volatile int r; uint8_t sendMsg[8];
 // Output none
 // build the necessary NPI message that will Get Status
 void BuildGetVersionMsg(uint8_t *msg){
-  extern const uint8_t NPI_GetVersion[];
   uint32_t msgSize, i;
   
   msgSize = GetMsgSize(NPI_GetVersion);
@@ -164,7 +168,6 @@ uint32_t Lab6_GetVersion(void){volatile int r;uint8_t sendMsg[8];
 // Output none
 // build the necessary NPI message that will add a service
 void BuildAddServiceMsg(uint16_t uuid, uint8_t *msg){
-  extern uint8_t NPI_AddService[];
   uint8_t i;
 
   for (i = 0; i < 6; i++)   // poulates SOF, Length, Command, Command Parameter fields
@@ -189,7 +192,6 @@ int Lab6_AddService(uint16_t uuid){ int r; uint8_t sendMsg[12];
 // Output none
 // build the necessary NPI message that will register a service
 void BuildRegisterServiceMsg(uint8_t *msg){
-  extern const uint8_t NPI_Register[];
   uint32_t msgSize, i;
   
   msgSize = GetMsgSize(NPI_Register);
@@ -219,7 +221,6 @@ int Lab6_RegisterService(void){ int r; uint8_t sendMsg[8];
 // build the necessary NPI message that will add a characteristic value
 void BuildAddCharValueMsg(uint16_t uuid,  
       uint8_t permission, uint8_t properties, uint8_t *msg){
-  extern uint8_t NPI_AddCharValue[];
   static const uint16_t AttrValueMaxLength = 512;
   static const uint8_t RFU = 0x00;
   uint8_t i;
@@ -241,7 +242,6 @@ void BuildAddCharValueMsg(uint16_t uuid,
 // Output none
 // build the necessary NPI message that will add a Descriptor Declaration
 void BuildAddCharDescriptorMsg(char name[], uint8_t *msg){
-  extern uint8_t NPI_AddCharDescriptor[];
   uint8_t stringLength,
           msgLength,
           i;
