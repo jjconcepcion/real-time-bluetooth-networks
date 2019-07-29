@@ -55,6 +55,7 @@ extern const uint8_t NPI_GetStatus[];
 extern uint8_t NPI_AddService[];
 extern uint8_t NPI_AddCharValue[];
 extern uint8_t NPI_AddCharDescriptor[];
+extern uint8_t NPI_AddCharDescriptor4[];
 //**************Lab 6 routines*******************
 // **********GetMsgSize**********
 // helper function, returns length of NPI message frame
@@ -310,15 +311,27 @@ int Lab6_AddCharacteristic(uint16_t uuid, uint16_t thesize, void *pt, uint8_t pe
 // Output none
 // build the necessary NPI message that will add a Descriptor Declaration
 void BuildAddNotifyCharDescriptorMsg(char name[], uint8_t *msg){
-// set length and maxlength to the string length
-// set the permissions on the string to read
-// set User Description String
-// set CCCD parameters read+write
-// for a hint see NPI_AddCharDescriptor4 in VerySimpleApplicationProcessor.c
-// for a hint see second half of AP_AddNotifyCharacteristic
-//****You implement this function as part of Lab 6*****
-  
-  
+  uint8_t stringLength,
+          msgLength,
+          i;
+  char *ch;
+
+  // set SOF, SNP Add Characteristic Descriptor Declaration, User Description 
+  // String+CCCD, CCCD parameters read+write, GATT Read Permissions
+  for (i = 0; i < 8; i++)
+    msg[i] = NPI_AddCharDescriptor4[i]; 
+  // calculate string length including null-terminator
+  stringLength = (uint8_t) StrLen(name) + 1;
+  // Set length field
+  msgLength = stringLength + 7;
+  SetLittleEndian(msgLength, &msg[1]);
+  // Set max length and initial length of user description string
+  SetLittleEndian(stringLength, &msg[8]);
+  SetLittleEndian(stringLength, &msg[10]);
+  // Set user description string data
+  for (i = 0, ch = name; i < stringLength; i++, ch++)
+    msg[12+i] = *ch;
+  SetFCS(msg);
 }
   
 //*************Lab6_AddNotifyCharacteristic**************
