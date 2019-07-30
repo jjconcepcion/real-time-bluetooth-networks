@@ -57,6 +57,7 @@ extern uint8_t NPI_AddCharValue[];
 extern uint8_t NPI_AddCharDescriptor[];
 extern uint8_t NPI_AddCharDescriptor4[];
 extern uint8_t NPI_GATTSetDeviceName[];
+extern const uint8_t NPI_SetAdvertisement1[];
 //**************Lab 6 routines*******************
 // **********GetMsgSize**********
 // helper function, returns length of NPI message frame
@@ -403,17 +404,13 @@ void BuildSetDeviceNameMsg(char name[], uint8_t *msg){
 // Output none
 // build the necessary NPI message for Non-connectable Advertisement Data
 void BuildSetAdvertisementData1Msg(uint8_t *msg){
-// for a hint see NPI_SetAdvertisementMsg in VerySimpleApplicationProcessor.c
-// for a hint see NPI_SetAdvertisement1 in AP.c
-// Non-connectable Advertisement Data
-// GAP_ADTYPE_FLAGS,DISCOVERABLE | no BREDR  
-// Texas Instruments Company ID 0x000D
-// TI_ST_DEVICE_ID = 3
-// TI_ST_KEY_DATA_ID
-// Key state=0
-//****You implement this function as part of Lab 6*****
+  uint32_t msgSize, i;
   
-  
+  msgSize = GetMsgSize(NPI_SetAdvertisement1);
+  // copy NPI_SetAdvertisement1 message template
+  for (i = 0; i < msgSize; i++)
+    msg[i] = NPI_SetAdvertisement1[i];
+  SetFCS(msg);
 }
 
 //*************BuildSetAdvertisementDataMsg**************
