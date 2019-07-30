@@ -59,6 +59,8 @@ extern uint8_t NPI_AddCharDescriptor4[];
 extern uint8_t NPI_GATTSetDeviceName[];
 extern const uint8_t NPI_SetAdvertisement1[];
 extern uint8_t NPI_SetAdvertisementData[];
+extern const uint8_t NPI_StartAdvertisement[];
+
 //**************Lab 6 routines*******************
 // **********GetMsgSize**********
 // helper function, returns length of NPI message frame
@@ -462,11 +464,14 @@ void BuildSetAdvertisementDataMsg(char name[], uint8_t *msg){
 // Output none
 // build the necessary NPI message to start advertisement
 void BuildStartAdvertisementMsg(uint16_t interval, uint8_t *msg){
-// for a hint see NPI_StartAdvertisementMsg in VerySimpleApplicationProcessor.c
-// for a hint see NPI_StartAdvertisement in AP.c
-//****You implement this function as part of Lab 6*****
+  uint32_t msgSize, i;
   
-  
+  msgSize = GetMsgSize(NPI_StartAdvertisement);
+  // copy NPI_StartAdvertisement message template
+  for (i = 0; i < msgSize; i++)
+    msg[i] = NPI_StartAdvertisement[i];
+  SetLittleEndian(interval, &msg[8]);
+  SetFCS(msg);
 }
 
 //*************Lab6_StartAdvertisement**************
