@@ -56,6 +56,7 @@ extern uint8_t NPI_AddService[];
 extern uint8_t NPI_AddCharValue[];
 extern uint8_t NPI_AddCharDescriptor[];
 extern uint8_t NPI_AddCharDescriptor4[];
+extern uint8_t NPI_GATTSetDeviceName[];
 //**************Lab 6 routines*******************
 // **********GetMsgSize**********
 // helper function, returns length of NPI message frame
@@ -379,9 +380,22 @@ int Lab6_AddNotifyCharacteristic(uint16_t uuid, uint16_t thesize, void *pt,
 void BuildSetDeviceNameMsg(char name[], uint8_t *msg){
 // for a hint see NPI_GATTSetDeviceNameMsg in VerySimpleApplicationProcessor.c
 // for a hint see NPI_GATTSetDeviceName in AP.c
-//****You implement this function as part of Lab 6*****
-  
-  
+  uint8_t stringLength,
+          msgLength,
+          i;
+  char *ch;
+
+  // set SOF, SNP Set GATT Parameter, Generic Access Service, Device Name fields
+  for (i = 0; i < 8; i++)
+    msg[i] = NPI_GATTSetDeviceName[i]; 
+  stringLength = (uint8_t) StrLen(name);
+  // Set length field
+  msgLength = stringLength + 3;
+  SetLittleEndian(msgLength, &msg[1]);
+  // Set device name string data
+  for (i = 0, ch = name; i < stringLength; i++, ch++)
+    msg[8+i] = *ch;
+  SetFCS(msg);
 }
 //*************BuildSetAdvertisementData1Msg**************
 // Create a Set Advertisement Data message, used in Lab 6
