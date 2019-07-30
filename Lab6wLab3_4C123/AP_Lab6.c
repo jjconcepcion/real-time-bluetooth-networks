@@ -58,6 +58,7 @@ extern uint8_t NPI_AddCharDescriptor[];
 extern uint8_t NPI_AddCharDescriptor4[];
 extern uint8_t NPI_GATTSetDeviceName[];
 extern const uint8_t NPI_SetAdvertisement1[];
+extern uint8_t NPI_SetAdvertisementData[];
 //**************Lab 6 routines*******************
 // **********GetMsgSize**********
 // helper function, returns length of NPI message frame
@@ -420,11 +421,39 @@ void BuildSetAdvertisementData1Msg(uint8_t *msg){
 // Output none
 // build the necessary NPI message for Scan Response Data
 void BuildSetAdvertisementDataMsg(char name[], uint8_t *msg){
-// for a hint see NPI_SetAdvertisementDataMsg in VerySimpleApplicationProcessor.c
-// for a hint see NPI_SetAdvertisementData in AP.c
-//****You implement this function as part of Lab 6*****
-  
-  
+  static const uint8_t ConnectionParameters[] = {
+  // connection interval range
+    0x05,           // length of this data
+    0x12,           // GAP_ADTYPE_SLAVE_CONN_INTERVAL_RANGE
+    0x50,0x00,      // DEFAULT_DESIRED_MIN_CONN_INTERVAL
+    0x20,0x03,      // DEFAULT_DESIRED_MAX_CONN_INTERVAL
+  // Tx power level
+    0x02,           // length of this data
+    0x0A,           // GAP_ADTYPE_POWER_LEVEL
+    0x00            // 0dBm
+  };
+  uint8_t dataLength,
+          msgLength,
+          i;
+  char *ch;
+
+  // set SOF, SNP Set Advertisement Data, Scan Response Data, type=LOCAL_NAME_COMPLETE
+  for (i = 0; i < 8; i++)
+    msg[i] = NPI_SetAdvertisementData[i]; 
+  // calculate string length
+  dataLength = (uint8_t) StrLen(name);
+  // Set Advertisement Data field length
+  msg[6] = dataLength + 1;
+  // Set length field
+  msgLength = dataLength + 12;
+  SetLittleEndian(msgLength, &msg[1]);
+  // Set Advertisement data string
+  for (i = 0, ch = name; i < dataLength; i++, ch++)
+    msg[8+i] = *ch;
+  // Set AdvertisementData connection paramters
+  for (i = 0, ch = name; i < 9; i++, ch++)
+    msg[8+dataLength+i] = ConnectionParameters[i];
+  SetFCS(msg);
 }
 //*************BuildStartAdvertisementMsg**************
 // Create a Start Advertisement Data message, used in Lab 6
